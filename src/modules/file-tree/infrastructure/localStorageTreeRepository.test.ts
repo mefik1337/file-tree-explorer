@@ -1,0 +1,51 @@
+import { describe, expect, it } from 'vitest';
+import { sampleJson } from '@/test/fixtures';
+import { createLocalStorageTreeRepository } from './localStorageTreeRepository';
+
+const createRefusingStorage = (): Storage => {
+  const storage = window.localStorage;
+  return {
+    get length() {
+      return storage.length;
+    },
+    key: (index) => storage.key(index),
+    getItem: (key) => storage.getItem(key),
+    removeItem: (key) => storage.removeItem(key),
+    clear: () => storage.clear(),
+    setItem: () => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    },
+  };
+};
+
+describe('localStorage tree repository', () => {
+  it('has nothing to load before anything was saved', () => {
+    expect(createLocalStorageTreeRepository(window.localStorage).load()).toBeNull();
+  });
+
+  it('loads the saved document after a page reload', () => {
+    createLocalStorageTreeRepository(window.localStorage).save(sampleJson);
+
+    const afterReload = createLocalStorageTreeRepository(window.localStorage);
+
+    expect(afterReload.load()).toBe(sampleJson);
+  });
+
+  it('forgets the document once cleared', () => {
+    const repository = createLocalStorageTreeRepository(window.localStorage);
+    repository.save(sampleJson);
+
+    repository.clear();
+
+    expect(repository.load()).toBeNull();
+  });
+
+  it('reports a failed save and does not keep a stale document', () => {
+    createLocalStorageTreeRepository(window.localStorage).save('{"name":"old"}');
+    const repository = createLocalStorageTreeRepository(createRefusingStorage());
+
+    const saved = repository.save(sampleJson);
+
+    expect({ saved, loaded: repository.load() }).toEqual({ saved: false, loaded: null });
+  });
+});
