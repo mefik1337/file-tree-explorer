@@ -1,3 +1,3 @@
 export { SearchBox } from './ui/SearchBox';
 export { SearchResults } from './ui/SearchResults';
-export { useSearchQuery } from './ui/useSearchQuery';
+export { useSearchQuery, type SearchKind } from './ui/useSearchQuery';

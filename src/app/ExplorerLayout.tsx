@@ -14,7 +14,7 @@ import styles from './ExplorerLayout.module.css';
 export const ExplorerLayout = () => {
   const { tree, persisted } = useFileTree();
   const selectedPath = useCurrentNodePath();
-  const [query, setQuery] = useSearchQuery();
+  const { query, kind, setQuery, setKind } = useSearchQuery();
   const { viewMode } = usePreferences();
 
   if (tree === null) return <NoTreeLoaded />;
@@ -48,7 +48,7 @@ export const ExplorerLayout = () => {
           {!searching && <ChildOrderSwitch className={styles.sortSwitch} />}
           {searching && (
             <div className={styles.results}>
-              <SearchResults tree={tree} query={query} />
+              <SearchResults tree={tree} query={query} kind={kind} onKindChange={setKind} />
             </div>
           )}
           <nav aria-label="File tree" className={styles.treeNav} hidden={searching}>

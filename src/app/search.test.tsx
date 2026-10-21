@@ -72,4 +72,60 @@ describe('searching by name', () => {
     expect(currentLocation()).toBe('/tree');
     expect(screen.getByRole('tree')).toBeInTheDocument();
   });
+
+  it('narrows results to files and keeps that filter in the address', async () => {
+    const { user } = renderApp('/tree?q=s', { storedTree: sampleJson });
+
+    await user.click(screen.getByRole('radio', { name: 'Files' }));
+
+    expect(currentLocation()).toBe('/tree?q=s&type=file');
+    expect(resultPaths()).toEqual(['root/src/index.ts', 'root/src/components/Button.tsx', 'root/package.json']);
+  });
+
+  it('restores the type filter after a refresh', () => {
+    renderApp('/tree?q=s&type=folder', { storedTree: sampleJson });
+
+    expect(screen.getByRole('radio', { name: 'Folders' })).toBeChecked();
+    expect(resultPaths()).toEqual(['root/src', 'root/src/components']);
+  });
+
+  it('searches full paths when the query contains a slash', async () => {
+    const { user } = renderApp('/tree', { storedTree: sampleJson });
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search by name' }), 'components/');
+
+    expect(resultPaths()).toEqual(['root/src/components/Button.tsx']);
+  });
+
+  it('moves between the search field and the results with the arrow keys', async () => {
+    const { user } = renderApp('/tree?q=s', { storedTree: sampleJson });
+    const searchbox = screen.getByRole('searchbox', { name: 'Search by name' });
+
+    await user.click(searchbox);
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('link', { name: 'root/src' })).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('link', { name: 'root/src/index.ts' })).toHaveFocus();
+
+    await user.keyboard('{ArrowUp}{ArrowUp}');
+    expect(searchbox).toHaveFocus();
+  });
+
+  it('opens a result picked with the keyboard', async () => {
+    const { user } = renderApp('/tree?q=json', { storedTree: sampleJson });
+
+    await user.click(screen.getByRole('searchbox', { name: 'Search by name' }));
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    expect(currentLocation()).toBe('/tree/package.json?q=json');
+  });
+
+  it('drops the type filter together with the query when the search is cleared', async () => {
+    const { user } = renderApp('/tree?q=s&type=file', { storedTree: sampleJson });
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(currentLocation()).toBe('/tree');
+  });
 });

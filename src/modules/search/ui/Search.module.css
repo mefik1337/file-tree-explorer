@@ -63,6 +63,15 @@
   gap: 4px;
 }
 
+.section[data-stale] .results {
+  opacity: 0.6;
+  transition: opacity 0.2s ease 0.1s;
+}
+
+.kind {
+  margin: 0 4px 4px;
+}
+
 .summary {
   margin: 0 12px 2px;
   color: var(--color-text-dim);
@@ -98,6 +107,10 @@
   border-radius: var(--radius-s);
   transition: background-color 0.15s ease;
   animation: reveal 0.4s var(--spring) both;
+}
+
+.result:focus-visible {
+  box-shadow: inset var(--focus-ring);
 }
 
 .result:hover {
