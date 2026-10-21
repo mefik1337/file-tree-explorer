@@ -1,6 +1,7 @@
-export { FileTree } from './domain/FileTree';
+export { FileTree, type SearchOptions } from './domain/FileTree';
 export type { FileNode, FolderNode, TreeNode } from './domain/TreeNode';
 export { ancestorPaths } from './domain/NodePath';
+export { CHILD_ORDERS, type ChildOrder } from './domain/ChildOrder';
 export type { TreeValidationError } from './domain/buildTree';
 export { formatFileSize } from './domain/FileSize';
 export { importFileTree, type ImportError } from './application/importFileTree';

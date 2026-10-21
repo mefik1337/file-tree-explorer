@@ -75,6 +75,26 @@ describe('FileTree', () => {
     it('returns nothing when no name matches', () => {
       expect(searchPaths('README')).toEqual([]);
     });
+
+    it('matches the full path when the query contains a slash', () => {
+      expect(searchPaths('components/b')).toEqual(['src/components/Button.tsx']);
+    });
+
+    it('lists everything below a folder for a query ending with a slash', () => {
+      expect(searchPaths('src/')).toEqual(['src/index.ts', 'src/components', 'src/components/Button.tsx']);
+    });
+
+    it('can be narrowed to folders', () => {
+      expect(createSampleTree().search('s', { kind: 'folder' }).map((node) => node.path)).toEqual(['src', 'src/components']);
+    });
+
+    it('can be narrowed to files', () => {
+      expect(createSampleTree().search('s', { kind: 'file' }).map((node) => node.path)).toEqual([
+        'src/index.ts',
+        'src/components/Button.tsx',
+        'package.json',
+      ]);
+    });
   });
 
   describe('fromSnapshot validation', () => {
@@ -142,6 +162,41 @@ describe('FileTree', () => {
       expect(leaf?.path.split('/')).toHaveLength(DEPTH + 1);
       expect(tree.subtreeSize('')).toBe(7);
       expect(tree.find(leaf?.path ?? '')?.name).toBe('leaf.txt');
+    });
+  });
+
+  describe('orderedChildren', () => {
+    const createMixedTree = (): FileTree => {
+      const result = FileTree.fromSnapshot({
+        name: 'root',
+        type: 'folder',
+        children: [
+          { name: 'b.txt', type: 'file', size: 10 },
+          { name: 'file10.txt', type: 'file', size: 5 },
+          { name: 'A', type: 'folder', children: [{ name: 'big.bin', type: 'file', size: 100 }] },
+          { name: 'file2.txt', type: 'file', size: 50 },
+          { name: 'c', type: 'folder', children: [] },
+        ],
+      });
+      if (!result.ok) throw new Error(result.error.message);
+      return result.value;
+    };
+
+    const orderedNames = (order: 'original' | 'name' | 'size'): string[] => {
+      const tree = createMixedTree();
+      return tree.orderedChildren(tree.root, order).map((node) => node.name);
+    };
+
+    it('keeps the order of the imported document', () => {
+      expect(orderedNames('original')).toEqual(['b.txt', 'file10.txt', 'A', 'file2.txt', 'c']);
+    });
+
+    it('sorts by name with folders first, ignoring case and comparing numbers naturally', () => {
+      expect(orderedNames('name')).toEqual(['A', 'c', 'b.txt', 'file2.txt', 'file10.txt']);
+    });
+
+    it('sorts by size, largest first, with folders first and measured by their subtree', () => {
+      expect(orderedNames('size')).toEqual(['A', 'c', 'file2.txt', 'b.txt', 'file10.txt']);
     });
   });
 });

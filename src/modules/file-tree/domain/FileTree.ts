@@ -1,5 +1,6 @@
 import { ok, type Result } from '@/shared/lib/result';
 import { buildTree, type TreeValidationError } from './buildTree';
+import { orderNodes, type ChildOrder } from './ChildOrder';
 import { PATH_SEPARATOR, ROOT_PATH } from './NodePath';
 import type { FolderNode, TreeNode } from './TreeNode';
 
@@ -32,6 +33,10 @@ const computeSubtreeSizes = (nodesParentsFirst: readonly TreeNode[]): Map<string
   return sizes;
 };
 
+export type SearchOptions = {
+  readonly kind?: TreeNode['kind'];
+};
+
 export class FileTree {
   private constructor(
     readonly root: FolderNode,
@@ -56,17 +61,24 @@ export class FileTree {
     return this.subtreeSizes.get(path) ?? 0;
   }
 
+  orderedChildren(folder: FolderNode, order: ChildOrder): readonly TreeNode[] {
+    return orderNodes(folder.children, order, (node) => this.subtreeSize(node.path));
+  }
+
   fullPath(path: string): string {
     return path === ROOT_PATH ? this.root.name : `${this.root.name}${PATH_SEPARATOR}${path}`;
   }
 
-  search(query: string): TreeNode[] {
+  search(query: string, { kind }: SearchOptions = {}): TreeNode[] {
     const needle = query.trim().toLocaleLowerCase();
     if (needle === '') return [];
 
+    const matchesPath = needle.includes(PATH_SEPARATOR);
     const hits: TreeNode[] = [];
     for (const node of walkInTreeOrder(this.root)) {
-      if (node.name.toLocaleLowerCase().includes(needle)) hits.push(node);
+      if (kind !== undefined && node.kind !== kind) continue;
+      const haystack = matchesPath ? this.fullPath(node.path) : node.name;
+      if (haystack.toLocaleLowerCase().includes(needle)) hits.push(node);
     }
     return hits;
   }
