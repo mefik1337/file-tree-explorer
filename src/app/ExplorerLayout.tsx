@@ -1,9 +1,11 @@
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
 import { SearchBox, SearchResults, useSearchQuery } from '@/modules/search';
 import { TreeView } from '@/modules/tree-browser';
 import { NoTreeLoaded } from '@/modules/tree-import';
+import { paths } from '@/shared/routing/paths';
 import { useCurrentNodePath } from '@/shared/routing/useCurrentNodePath';
+import styles from './ExplorerLayout.module.css';
 
 export const ExplorerLayout = () => {
   const { tree, persisted } = useFileTree();
@@ -14,20 +16,30 @@ export const ExplorerLayout = () => {
 
   const searching = query.trim() !== '';
   return (
-    <div>
+    <div className={styles.shell}>
+      <header className={styles.header}>
+        <Link className={styles.brand} to={paths.home}>
+          FileTree Explorer
+        </Link>
+        <Link to={paths.home}>Load another tree</Link>
+      </header>
       {!persisted && (
-        <p role="status">This tree is too large to be saved in the browser and will be lost after a refresh.</p>
+        <p role="status" className={styles.notice}>
+          This tree is too large to be saved in the browser and will be lost after a refresh.
+        </p>
       )}
-      <aside>
-        <SearchBox query={query} onQueryChange={setQuery} />
-        {searching && <SearchResults tree={tree} query={query} />}
-        <nav aria-label="File tree" hidden={searching}>
-          <TreeView root={tree.root} selectedPath={selectedPath} />
-        </nav>
-      </aside>
-      <main>
-        <Outlet />
-      </main>
+      <div className={styles.body}>
+        <aside className={styles.sidebar}>
+          <SearchBox query={query} onQueryChange={setQuery} />
+          {searching && <SearchResults tree={tree} query={query} />}
+          <nav aria-label="File tree" hidden={searching}>
+            <TreeView root={tree.root} selectedPath={selectedPath} />
+          </nav>
+        </aside>
+        <main className={styles.main}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

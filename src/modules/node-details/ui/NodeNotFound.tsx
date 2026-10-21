@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { paths } from '@/shared/routing/paths';
+import styles from './NodeDetails.module.css';
 
 type NodeNotFoundProps = {
   readonly fullPath: string;
 };
 
 export const NodeNotFound = ({ fullPath }: NodeNotFoundProps) => (
-  <article>
-    <h1>Node not found</h1>
+  <article className={styles.card}>
+    <h1 className={styles.title}>Node not found</h1>
     <p>
       There is no node at <code>{fullPath}</code>.
     </p>

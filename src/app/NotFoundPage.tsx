@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { paths } from '@/shared/routing/paths';
+import { EmptyState } from '@/shared/ui/EmptyState';
 
 export const NotFoundPage = () => (
-  <main>
-    <h1>Page not found</h1>
+  <EmptyState title="Page not found">
+    <p>This address does not lead anywhere in FileTree Explorer.</p>
     <Link to={paths.home}>Go to import</Link>
-  </main>
+  </EmptyState>
 );

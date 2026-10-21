@@ -4,6 +4,7 @@ import { useFileTree } from '@/modules/file-tree';
 import { readFileAsText } from '@/shared/lib/readFileAsText';
 import { paths } from '@/shared/routing/paths';
 import { exampleTreeJson } from './exampleTree';
+import styles from './ImportPage.module.css';
 
 export const ImportPage = () => {
   const { tree, loadTree } = useFileTree();
@@ -24,6 +25,7 @@ export const ImportPage = () => {
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
     try {
       const content = await readFileAsText(file);
@@ -35,19 +37,49 @@ export const ImportPage = () => {
   };
 
   return (
-    <main>
-      <h1>FileTree Explorer</h1>
-      {tree !== null && <Link to={paths.tree}>Continue with "{tree.root.name}"</Link>}
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="tree-json">Tree JSON</label>
-        <textarea id="tree-json" value={json} onChange={(event) => setJson(event.target.value)} />
-        <button type="button" onClick={() => setJson(exampleTreeJson)}>
-          Use example
+    <main className={styles.page}>
+      <h1 className={styles.title}>FileTree Explorer</h1>
+      <p className={styles.lead}>Paste or upload a JSON directory structure to browse it as a tree.</p>
+      {tree !== null && (
+        <Link className={styles.continue} to={paths.tree}>
+          Continue with "{tree.root.name}"
+        </Link>
+      )}
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <label className={styles.label} htmlFor="tree-json">
+          Tree JSON
+        </label>
+        <textarea
+          id="tree-json"
+          className={styles.textarea}
+          spellCheck={false}
+          placeholder='{ "name": "root", "type": "folder", "children": [] }'
+          value={json}
+          onChange={(event) => setJson(event.target.value)}
+        />
+        <div className={styles.toolbar}>
+          <button type="button" className={styles.button} onClick={() => setJson(exampleTreeJson)}>
+            Use example
+          </button>
+          <label className={styles.label} htmlFor="tree-file">
+            Upload JSON file
+          </label>
+          <input
+            id="tree-file"
+            className={styles.fileInput}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleUpload}
+          />
+        </div>
+        {error !== null && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        <button type="submit" className={styles.primary}>
+          Explore tree
         </button>
-        <label htmlFor="tree-file">Upload JSON file</label>
-        <input id="tree-file" type="file" accept=".json,application/json" onChange={handleUpload} />
-        {error !== null && <p role="alert">{error}</p>}
-        <button type="submit">Explore tree</button>
       </form>
     </main>
   );

@@ -1,0 +1,65 @@
+.form {
+  display: flex;
+  gap: 6px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.clear {
+  padding: 0 10px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.summary {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.results {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  display: block;
+  overflow: hidden;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+
+.result:hover,
+.result[aria-current='page'] {
+  background: var(--color-accent-soft);
+}
+
+.parent {
+  color: var(--color-text-muted);
+}
+
+.name {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.match {
+  color: inherit;
+  background: var(--color-highlight);
+  border-radius: 2px;
+}
