@@ -120,6 +120,11 @@
   background: var(--color-surface);
 }
 
+.columnsMain {
+  padding: 0;
+  overflow: hidden;
+}
+
 @keyframes drop {
   from {
     opacity: 0;

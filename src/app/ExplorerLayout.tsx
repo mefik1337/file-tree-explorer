@@ -1,6 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
+import { ColumnBrowser } from '@/modules/column-browser';
 import { useFileTree } from '@/modules/file-tree';
-import { ChildOrderSwitch, ThemeSwitch } from '@/modules/preferences';
+import { ChildOrderSwitch, ThemeSwitch, usePreferences, ViewModeSwitch } from '@/modules/preferences';
 import { SearchBox, SearchResults, useSearchQuery } from '@/modules/search';
 import { TreeView } from '@/modules/tree-browser';
 import { NoTreeLoaded } from '@/modules/tree-import';
@@ -14,6 +15,7 @@ export const ExplorerLayout = () => {
   const { tree, persisted } = useFileTree();
   const selectedPath = useCurrentNodePath();
   const [query, setQuery] = useSearchQuery();
+  const { viewMode } = usePreferences();
 
   if (tree === null) return <NoTreeLoaded />;
 
@@ -27,6 +29,7 @@ export const ExplorerLayout = () => {
           <span className={styles.treeName}>· {tree.root.name}</span>
         </Link>
         <div className={styles.navActions}>
+          <ViewModeSwitch />
           <ThemeSwitch className={styles.themeSwitch} />
           <Link className={`${buttons.button} ${buttons.secondary} ${buttons.small}`} to={paths.home}>
             Load another tree
@@ -52,9 +55,17 @@ export const ExplorerLayout = () => {
             <TreeView tree={tree} selectedPath={selectedPath} />
           </nav>
         </aside>
-        <main className={styles.main}>
-          <Outlet />
-        </main>
+        {viewMode === 'columns' ? (
+          <main className={`${styles.main} ${styles.columnsMain}`}>
+            <ColumnBrowser tree={tree} selectedPath={selectedPath}>
+              <Outlet />
+            </ColumnBrowser>
+          </main>
+        ) : (
+          <main className={styles.main}>
+            <Outlet />
+          </main>
+        )}
       </div>
     </div>
   );
