@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { sampleJson } from '@/test/fixtures';
 import { currentLocation, renderApp } from '@/test/renderApp';
@@ -16,10 +16,9 @@ describe('browsing the tree', () => {
 
     await user.click(screen.getByRole('button', { name: 'Expand src' }));
 
-    const src = screen.getByRole('treeitem', { name: 'src' });
-    expect(src).toHaveAttribute('aria-expanded', 'true');
-    expect(within(src).getByRole('treeitem', { name: 'components' })).toBeInTheDocument();
-    expect(within(src).getByRole('treeitem', { name: 'index.ts' })).toBeInTheDocument();
+    expect(screen.getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('treeitem', { name: 'components' })).toHaveAttribute('aria-level', '2');
+    expect(screen.getByRole('treeitem', { name: 'index.ts' })).toHaveAttribute('aria-level', '2');
   });
 
   it('collapses an expanded folder', async () => {
@@ -74,5 +73,36 @@ describe('browsing the tree', () => {
     await user.click(within(tree).getByRole('link', { name: 'package.json' }));
 
     expect(within(tree).getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('remembers expanded folders after a page refresh', async () => {
+    const { user } = renderApp('/tree', { storedTree: sampleJson });
+
+    await user.click(screen.getByRole('button', { name: 'Expand src' }));
+    cleanup();
+    renderApp('/tree');
+
+    expect(screen.getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('only renders the rows that fit on screen for very large folders', async () => {
+    const storedTree = JSON.stringify({
+      name: 'root',
+      type: 'folder',
+      children: [
+        {
+          name: 'big',
+          type: 'folder',
+          children: Array.from({ length: 5000 }, (_, index) => ({ name: `file-${index}.txt`, type: 'file', size: 1 })),
+        },
+      ],
+    });
+    const { user } = renderApp('/tree', { storedTree });
+
+    await user.click(screen.getByRole('button', { name: 'Expand big' }));
+
+    const rendered = screen.getAllByRole('treeitem');
+    expect(rendered.length).toBeLessThan(200);
+    expect(screen.getByRole('treeitem', { name: 'file-0.txt' })).toHaveAttribute('aria-setsize', '5000');
   });
 });

@@ -18,6 +18,12 @@
   pointer-events: none;
 }
 
+.themeSwitch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
 .hero {
   display: grid;
   justify-items: center;

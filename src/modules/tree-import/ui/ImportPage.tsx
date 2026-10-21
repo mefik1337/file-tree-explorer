@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
+import { ThemeSwitch } from '@/modules/preferences';
 import { readFileAsText } from '@/shared/lib/readFileAsText';
 import { paths } from '@/shared/routing/paths';
 import buttons from '@/shared/ui/Button.module.css';
@@ -61,6 +62,7 @@ export const ImportPage = () => {
 
   return (
     <main className={styles.page}>
+      <ThemeSwitch className={styles.themeSwitch} />
       <header className={styles.hero}>
         <AppIcon size={76} className={styles.appIcon} />
         <p className={styles.eyebrow}>FileTree Explorer</p>

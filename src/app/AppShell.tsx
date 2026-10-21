@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { FileTreeProvider, type TreeRepository } from '@/modules/file-tree';
+import { PreferencesProvider, type PreferencesRepository } from '@/modules/preferences';
 import { NodeDetailsPage } from '@/modules/node-details';
 import { ImportPage } from '@/modules/tree-import';
 import { paths } from '@/shared/routing/paths';
@@ -9,9 +10,11 @@ import { NotFoundPage } from './NotFoundPage';
 
 type AppShellProps = {
   readonly repository: TreeRepository;
+  readonly preferences: PreferencesRepository;
 };
 
-export const AppShell = ({ repository }: AppShellProps) => (
+export const AppShell = ({ repository, preferences }: AppShellProps) => (
+  <PreferencesProvider repository={preferences}>
   <FileTreeProvider repository={repository}>
     <Routes>
       <Route path={paths.home} element={<ImportPage />} />
@@ -23,4 +26,5 @@ export const AppShell = ({ repository }: AppShellProps) => (
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </FileTreeProvider>
+  </PreferencesProvider>
 );

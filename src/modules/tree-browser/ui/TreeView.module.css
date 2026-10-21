@@ -1,13 +1,36 @@
-.tree,
-.group {
+.container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.tree {
+  position: relative;
   margin: 0;
   padding: 0;
   list-style: none;
+  outline: none;
 }
 
-.group {
-  padding-left: 14px;
-  animation: reveal 0.45s var(--spring) both;
+.tree:focus-visible {
+  box-shadow: none;
+}
+
+.item {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 28px;
 }
 
 .row {
@@ -16,8 +39,8 @@
   grid-template-columns: 18px 20px minmax(0, 1fr);
   align-items: center;
   gap: 2px;
-  min-height: 28px;
-  padding: 0 8px 0 2px;
+  height: 28px;
+  padding: 0 8px 0 calc(2px + (var(--level, 1) - 1) * 14px);
   border-radius: var(--radius-s);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -27,6 +50,7 @@
 }
 
 .rootRow {
+  flex: none;
   margin-bottom: 2px;
   font-weight: 600;
 }
@@ -35,6 +59,14 @@
 .rootRow[data-selected] {
   color: var(--color-accent-text);
   background: var(--color-accent);
+}
+
+.tree:focus-visible .item[data-active] > .row {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.tree:focus-visible .item[data-active][aria-selected='true'] > .row {
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.6);
 }
 
 .toggle {
@@ -53,7 +85,7 @@
   color: var(--color-text);
 }
 
-.item[aria-selected='true'] > .row .toggle {
+.item[aria-selected='true'] .toggle {
   color: rgb(255 255 255 / 0.85);
 }
 
@@ -61,7 +93,7 @@
   transition: transform 0.45s var(--spring);
 }
 
-.item[aria-expanded='true'] > .row .chevron {
+.item[aria-expanded='true'] .chevron {
   transform: rotate(90deg);
 }
 
@@ -80,28 +112,10 @@
   text-overflow: ellipsis;
 }
 
-.link::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 20px;
-  border-radius: inherit;
-}
-
 .link:hover {
   text-decoration: none;
 }
 
 .link:focus-visible {
   box-shadow: none;
-}
-
-.link:focus-visible::after {
-  box-shadow: var(--focus-ring);
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
 }

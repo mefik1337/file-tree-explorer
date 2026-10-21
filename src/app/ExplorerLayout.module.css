@@ -35,6 +35,16 @@
   text-decoration: none;
 }
 
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sortSwitch {
+  margin: 0 4px;
+}
+
 .treeName {
   color: var(--color-text-soft);
   font-weight: 500;
@@ -72,15 +82,35 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   min-height: 0;
-  padding: 14px 10px 24px;
-  overflow: auto;
-  overscroll-behavior: contain;
+  padding: 14px 10px 0;
+  overflow: hidden;
   background: var(--glass);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
   border-right: 0.5px solid var(--color-line-strong);
+}
+
+.results {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -10px;
+  padding: 0 10px 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.treeNav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 8px;
+}
+
+.treeNav[hidden] {
+  display: none;
 }
 
 .main {
@@ -117,7 +147,8 @@
     padding: 20px 16px 48px;
   }
 
-  .treeName {
+  .treeName,
+  .themeSwitch {
     display: none;
   }
 }

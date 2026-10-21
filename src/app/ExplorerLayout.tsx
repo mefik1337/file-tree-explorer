@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
+import { ChildOrderSwitch, ThemeSwitch } from '@/modules/preferences';
 import { SearchBox, SearchResults, useSearchQuery } from '@/modules/search';
 import { TreeView } from '@/modules/tree-browser';
 import { NoTreeLoaded } from '@/modules/tree-import';
@@ -25,9 +26,12 @@ export const ExplorerLayout = () => {
           FileTree Explorer
           <span className={styles.treeName}>· {tree.root.name}</span>
         </Link>
-        <Link className={`${buttons.button} ${buttons.secondary} ${buttons.small}`} to={paths.home}>
-          Load another tree
-        </Link>
+        <div className={styles.navActions}>
+          <ThemeSwitch className={styles.themeSwitch} />
+          <Link className={`${buttons.button} ${buttons.secondary} ${buttons.small}`} to={paths.home}>
+            Load another tree
+          </Link>
+        </div>
       </header>
       {!persisted && (
         <p role="status" className={styles.notice}>
@@ -38,9 +42,14 @@ export const ExplorerLayout = () => {
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <SearchBox query={query} onQueryChange={setQuery} />
-          {searching && <SearchResults tree={tree} query={query} />}
-          <nav aria-label="File tree" hidden={searching}>
-            <TreeView root={tree.root} selectedPath={selectedPath} />
+          {!searching && <ChildOrderSwitch className={styles.sortSwitch} />}
+          {searching && (
+            <div className={styles.results}>
+              <SearchResults tree={tree} query={query} />
+            </div>
+          )}
+          <nav aria-label="File tree" className={styles.treeNav} hidden={searching}>
+            <TreeView tree={tree} selectedPath={selectedPath} />
           </nav>
         </aside>
         <main className={styles.main}>

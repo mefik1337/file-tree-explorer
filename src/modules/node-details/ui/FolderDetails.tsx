@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatFileSize, type FileTree, type FolderNode, type TreeNode } from '@/modules/file-tree';
+import { usePreferences } from '@/modules/preferences';
 import { useNodeHref } from '@/shared/routing/useNodeHref';
 import { ChevronIcon, FileIcon, FolderIcon } from '@/shared/ui/icons';
 import styles from './NodeDetails.module.css';
@@ -19,6 +20,8 @@ type FolderDetailsProps = {
 
 export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => {
   const nodeHref = useNodeHref();
+  const { childOrder } = usePreferences();
+  const children = tree.orderedChildren(folder, childOrder);
 
   return (
     <article className={styles.card}>
@@ -50,7 +53,7 @@ export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => {
         <p className={styles.empty}>This folder is empty.</p>
       ) : (
         <ul aria-label={`Children of ${folder.name}`} className={styles.children}>
-          {folder.children.map((child) => (
+          {children.map((child) => (
             <li key={child.path} className={styles.child}>
               {child.kind === 'file' ? <FileIcon size={22} name={child.name} /> : <FolderIcon size={22} />}
               <Link className={styles.childLink} to={nodeHref(child.path)}>

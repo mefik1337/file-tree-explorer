@@ -1,122 +1,167 @@
-import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ancestorPaths, type FolderNode, type TreeNode } from '@/modules/file-tree';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ancestorPaths, type FileTree } from '@/modules/file-tree';
+import { usePreferences } from '@/modules/preferences';
 import { useNodeHref } from '@/shared/routing/useNodeHref';
 import { ChevronIcon, FileIcon, FolderIcon } from '@/shared/ui/icons';
-import { useExpandedPaths, type ExpandedPaths } from './useExpandedPaths';
+import { useExpandedPaths } from './useExpandedPaths';
+import { useTreeKeyboard } from './useTreeKeyboard';
+import { useVirtualWindow } from './useVirtualWindow';
+import { flattenVisibleRows, type VisibleRow } from './visibleRows';
 import styles from './TreeView.module.css';
 
-const useScrollIntoViewWhen = <T extends HTMLElement>(active: boolean) => {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    if (active) ref.current?.scrollIntoView?.({ block: 'nearest' });
-  }, [active]);
-  return ref;
-};
+const ROW_HEIGHT = 28;
 
-type TreeItemProps = {
-  readonly node: TreeNode;
-  readonly expansion: ExpandedPaths;
-  readonly selectedPath: string;
-};
+const rowId = (path: string): string => `tree-row-${encodeURIComponent(path)}`;
 
-const TreeItem = ({ node, expansion, selectedPath }: TreeItemProps) => {
-  const nodeHref = useNodeHref();
-  const selected = node.path === selectedPath;
-  const rowRef = useScrollIntoViewWhen<HTMLDivElement>(selected);
-  const link = (
-    <Link className={styles.link} to={nodeHref(node.path)} aria-current={selected ? 'page' : undefined}>
-      {node.name}
-    </Link>
-  );
-
-  if (node.kind === 'file') {
-    return (
-      <li role="treeitem" aria-label={node.name} aria-selected={selected} className={styles.item}>
-        <div ref={rowRef} className={styles.row}>
-          <span />
-          <span className={styles.icon}>
-            <FileIcon name={node.name} />
-          </span>
-          {link}
-        </div>
-      </li>
-    );
+const resolveActiveIndex = (rows: readonly VisibleRow[], activePath: string | null): number => {
+  if (rows.length === 0) return -1;
+  if (activePath === null) return 0;
+  const indexByPath = (path: string) => rows.findIndex((row) => row.node.path === path);
+  const exact = indexByPath(activePath);
+  if (exact >= 0) return exact;
+  for (const ancestor of ancestorPaths(activePath).reverse()) {
+    const index = indexByPath(ancestor);
+    if (index >= 0) return index;
   }
+  return 0;
+};
 
-  const expanded = expansion.isExpanded(node.path);
+type TreeRowProps = {
+  readonly row: VisibleRow;
+  readonly index: number;
+  readonly active: boolean;
+  readonly selected: boolean;
+  readonly expanded: boolean;
+  readonly href: string;
+  readonly onToggle: (path: string) => void;
+  readonly onActivate: (path: string) => void;
+};
+
+const TreeRow = ({ row, index, active, selected, expanded, href, onToggle, onActivate }: TreeRowProps) => {
+  const { node, level, setSize, positionInSet } = row;
+  const isFolder = node.kind === 'folder';
+  const style = { transform: `translateY(${index * ROW_HEIGHT}px)`, '--level': level } as CSSProperties;
+
   return (
     <li
+      id={rowId(node.path)}
       role="treeitem"
       aria-label={node.name}
+      aria-level={level}
+      aria-setsize={setSize}
+      aria-posinset={positionInSet}
       aria-selected={selected}
-      aria-expanded={expanded}
+      aria-expanded={isFolder ? expanded : undefined}
+      data-active={active || undefined}
       className={styles.item}
+      style={style}
     >
-      <div ref={rowRef} className={styles.row}>
-        <button
-          type="button"
-          className={styles.toggle}
-          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${node.name}`}
-          onClick={() => expansion.toggle(node.path)}
+      <div className={styles.row}>
+        {isFolder ? (
+          <button
+            type="button"
+            tabIndex={-1}
+            className={styles.toggle}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${node.name}`}
+            onClick={() => {
+              onToggle(node.path);
+              onActivate(node.path);
+            }}
+          >
+            <ChevronIcon size={11} className={styles.chevron} />
+          </button>
+        ) : (
+          <span />
+        )}
+        <span className={styles.icon}>{isFolder ? <FolderIcon /> : <FileIcon name={node.name} />}</span>
+        <Link
+          tabIndex={-1}
+          className={styles.link}
+          to={href}
+          aria-current={selected ? 'page' : undefined}
+          onClick={() => onActivate(node.path)}
         >
-          <ChevronIcon size={11} className={styles.chevron} />
-        </button>
-        <span className={styles.icon}>
-          <FolderIcon />
-        </span>
-        {link}
+          {node.name}
+        </Link>
       </div>
-      {expanded && <TreeGroup nodes={node.children} expansion={expansion} selectedPath={selectedPath} />}
     </li>
   );
 };
 
-type TreeGroupProps = {
-  readonly nodes: readonly TreeNode[];
-  readonly expansion: ExpandedPaths;
-  readonly selectedPath: string;
-};
-
-const TreeGroup = ({ nodes, expansion, selectedPath }: TreeGroupProps) => (
-  <ul role="group" className={styles.group}>
-    {nodes.map((child) => (
-      <TreeItem key={child.path} node={child} expansion={expansion} selectedPath={selectedPath} />
-    ))}
-  </ul>
-);
-
 type TreeViewProps = {
-  readonly root: FolderNode;
+  readonly tree: FileTree;
   readonly selectedPath: string;
 };
 
-export const TreeView = ({ root, selectedPath }: TreeViewProps) => {
+export const TreeView = ({ tree, selectedPath }: TreeViewProps) => {
+  const navigate = useNavigate();
   const nodeHref = useNodeHref();
+  const { childOrder } = usePreferences();
   const expansion = useExpandedPaths();
-  const { expand } = expansion;
-  const rootSelected = selectedPath === root.path;
+  const { expand, toggle, isExpanded } = expansion;
+  const [activePath, setActivePath] = useState<string | null>(null);
+
+  const rows = useMemo(() => flattenVisibleRows(tree, isExpanded, childOrder), [tree, isExpanded, childOrder]);
+  const activeIndex = resolveActiveIndex(rows, activePath);
+  const activeRow = rows[activeIndex];
+  const { scrollerRef, start, end, totalHeight, onScroll, revealRow } = useVirtualWindow(rows.length, ROW_HEIGHT);
 
   useEffect(() => {
     expand(ancestorPaths(selectedPath));
-  }, [expand, selectedPath]);
+    if (selectedPath !== tree.root.path) setActivePath(selectedPath);
+  }, [expand, selectedPath, tree]);
+
+  useEffect(() => {
+    if (activeIndex >= 0) revealRow(activeIndex);
+  }, [activeIndex, revealRow]);
+
+  const handleKeyDown = useTreeKeyboard({
+    rows,
+    activeIndex,
+    expansion,
+    activate: setActivePath,
+    open: (path) => navigate(nodeHref(path)),
+  });
+
+  const rootSelected = selectedPath === tree.root.path;
 
   return (
-    <>
+    <div className={styles.container}>
       <div className={`${styles.row} ${styles.rootRow}`} data-selected={rootSelected || undefined}>
         <span />
         <span className={styles.icon}>
           <FolderIcon />
         </span>
-        <Link className={styles.link} to={nodeHref(root.path)} aria-current={rootSelected ? 'page' : undefined}>
-          {root.name}
+        <Link className={styles.link} to={nodeHref(tree.root.path)} aria-current={rootSelected ? 'page' : undefined}>
+          {tree.root.name}
         </Link>
       </div>
-      <ul role="tree" aria-label={root.name} className={styles.tree}>
-        {root.children.map((child) => (
-          <TreeItem key={child.path} node={child} expansion={expansion} selectedPath={selectedPath} />
-        ))}
-      </ul>
-    </>
+      <div ref={scrollerRef} className={styles.viewport} onScroll={onScroll}>
+        <ul
+          role="tree"
+          aria-label={tree.root.name}
+          tabIndex={0}
+          aria-activedescendant={activeRow ? rowId(activeRow.node.path) : undefined}
+          className={styles.tree}
+          style={{ height: totalHeight }}
+          onKeyDown={handleKeyDown}
+        >
+          {rows.slice(start, end).map((row, offset) => (
+            <TreeRow
+              key={row.node.path}
+              row={row}
+              index={start + offset}
+              active={row === activeRow}
+              selected={row.node.path === selectedPath}
+              expanded={row.node.kind === 'folder' && isExpanded(row.node.path)}
+              href={nodeHref(row.node.path)}
+              onToggle={toggle}
+              onActivate={setActivePath}
+            />
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 };
