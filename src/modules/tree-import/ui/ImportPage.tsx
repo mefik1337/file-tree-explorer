@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
 import { readFileAsText } from '@/shared/lib/readFileAsText';
@@ -11,6 +11,7 @@ export const ImportPage = () => {
   const navigate = useNavigate();
   const [json, setJson] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const explore = (source: string) => {
     const loaded = loadTree(source);
@@ -23,10 +24,7 @@ export const ImportPage = () => {
     explore(json);
   };
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
+  const importFile = async (file: File) => {
     try {
       const content = await readFileAsText(file);
       setJson(content);
@@ -34,6 +32,25 @@ export const ImportPage = () => {
     } catch {
       setError(`Could not read "${file.name}".`);
     }
+  };
+
+  const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) void importFile(file);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLFormElement>) => {
+    if (!event.dataTransfer.types.includes('Files')) return;
+    event.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    const file = event.dataTransfer.files[0];
+    if (file) void importFile(file);
   };
 
   return (
@@ -45,7 +62,15 @@ export const ImportPage = () => {
           Continue with "{tree.root.name}"
         </Link>
       )}
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form
+        aria-label="Import tree"
+        className={styles.form}
+        data-dragging={dragging || undefined}
+        onSubmit={handleSubmit}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
         <label className={styles.label} htmlFor="tree-json">
           Tree JSON
         </label>

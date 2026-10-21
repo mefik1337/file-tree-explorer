@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { sampleJson } from '@/test/fixtures';
 import { currentLocation, renderApp } from '@/test/renderApp';
@@ -107,5 +107,15 @@ describe('importing a tree', () => {
     renderApp('/tree', { storedTree: sampleJson });
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('explores a JSON file dropped onto the import form', async () => {
+    renderApp('/');
+    const file = new File([sampleJson], 'tree.json', { type: 'application/json' });
+
+    fireEvent.drop(screen.getByRole('form', { name: 'Import tree' }), { dataTransfer: { files: [file], types: ['Files'] } });
+
+    expect(await screen.findByRole('treeitem', { name: 'src' })).toBeInTheDocument();
+    expect(currentLocation()).toBe('/tree');
   });
 });

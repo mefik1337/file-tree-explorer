@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { formatFileSize, type FileTree, type FolderNode, type TreeNode } from '@/modules/file-tree';
 import { useNodeHref } from '@/shared/routing/useNodeHref';
 import styles from './NodeDetails.module.css';
+import { PathBar } from './PathBar';
 
 const describeChild = (tree: FileTree, child: TreeNode): string =>
   child.kind === 'file'
@@ -18,6 +19,7 @@ export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => {
 
   return (
     <article className={styles.card}>
+      <PathBar tree={tree} node={folder} />
       <p className={styles.kind}>Folder</p>
       <h1 className={styles.title}>{folder.name}</h1>
       <dl className={styles.facts}>

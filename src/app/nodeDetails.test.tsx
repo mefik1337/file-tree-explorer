@@ -82,4 +82,16 @@ describe('node details', () => {
     expect(detail('Full path')).toBe('root/notes #1?/100% done & ok.md');
     expect(detail('Size')).toBe('2 KB');
   });
+
+  it('shows a path bar with links to every ancestor of the node', async () => {
+    const { user } = renderApp('/tree/src%2Fcomponents%2FButton.tsx?q=btn', { storedTree: sampleJson });
+    const pathBar = screen.getByRole('navigation', { name: 'Path' });
+
+    expect(within(pathBar).getAllByRole('link').map((link) => link.textContent)).toEqual(['root', 'src', 'components']);
+    expect(within(pathBar).getByText('Button.tsx')).toHaveAttribute('aria-current', 'page');
+
+    await user.click(within(pathBar).getByRole('link', { name: 'src' }));
+
+    expect(currentLocation()).toBe('/tree/src?q=btn');
+  });
 });
