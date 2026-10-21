@@ -63,4 +63,13 @@ describe('searching by name', () => {
     expect(screen.getByRole('searchbox', { name: 'Search by name' })).toHaveValue('');
     expect(screen.getByRole('tree')).toBeInTheDocument();
   });
+
+  it('clears the search with the Escape key', async () => {
+    const { user } = renderApp('/tree?q=button', { storedTree: sampleJson });
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search by name' }), '{Escape}');
+
+    expect(currentLocation()).toBe('/tree');
+    expect(screen.getByRole('tree')).toBeInTheDocument();
+  });
 });

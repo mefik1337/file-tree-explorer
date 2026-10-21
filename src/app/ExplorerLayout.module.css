@@ -4,57 +4,103 @@
   height: 100%;
 }
 
-.header {
+.navBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 20px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  height: var(--nav-height);
+  padding: 0 16px 0 18px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-bottom: 0.5px solid var(--color-line-strong);
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--color-text);
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.brand:hover {
   text-decoration: none;
 }
 
+.treeName {
+  color: var(--color-text-soft);
+  font-weight: 500;
+}
+
 .notice {
-  margin: 0;
-  padding: 8px 20px;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 16px 0;
+  padding: 10px 14px;
+  color: var(--color-text);
+  font-size: 14px;
+  background: var(--glass-sheet);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  animation: drop 0.7s var(--spring) both;
+}
+
+.noticeIcon {
+  flex: none;
   color: var(--color-warning);
-  background: var(--color-warning-soft);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .body {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(260px, 360px) 1fr;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
   min-height: 0;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-height: 0;
-  padding: 16px;
+  padding: 14px 10px 24px;
   overflow: auto;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  overscroll-behavior: contain;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-right: 0.5px solid var(--color-line-strong);
 }
 
 .main {
   min-width: 0;
-  padding: 24px 32px;
+  padding: 28px clamp(20px, 4vw, 56px) 64px;
   overflow: auto;
+  background: var(--color-surface);
 }
 
-@media (max-width: 720px) {
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (max-width: 760px) {
   .shell {
     height: auto;
+    min-height: 100%;
   }
 
   .body {
@@ -62,12 +108,16 @@
   }
 
   .sidebar {
-    max-height: 50vh;
+    max-height: 55vh;
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 0.5px solid var(--color-line-strong);
   }
 
   .main {
-    padding: 16px;
+    padding: 20px 16px 48px;
+  }
+
+  .treeName {
+    display: none;
   }
 }

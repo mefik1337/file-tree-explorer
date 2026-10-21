@@ -6,80 +6,102 @@
 }
 
 .group {
-  margin-left: 11px;
-  padding-left: 8px;
-  border-left: 1px solid var(--color-border);
-}
-
-.rootLink {
-  display: block;
-  margin-bottom: 4px;
-  padding: 2px 6px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text);
-  text-decoration: none;
-  border-radius: 4px;
-}
-
-.rootLink[aria-current='page'] {
-  background: var(--color-accent-soft);
+  padding-left: 14px;
+  animation: reveal 0.45s var(--spring) both;
 }
 
 .row {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 20px minmax(0, 1fr);
   align-items: center;
   gap: 2px;
-  padding: 1px 4px;
-  border-radius: 4px;
+  min-height: 28px;
+  padding: 0 8px 0 2px;
+  border-radius: var(--radius-s);
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.item[aria-selected='true'] > .row {
-  background: var(--color-accent-soft);
+.row:hover {
+  background: var(--color-hover);
 }
 
-.toggle,
-.spacer {
-  flex: none;
-  width: 20px;
-  height: 20px;
+.rootRow {
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.item[aria-selected='true'] > .row,
+.rootRow[data-selected] {
+  color: var(--color-accent-text);
+  background: var(--color-accent);
 }
 
 .toggle {
   display: grid;
   place-items: center;
+  width: 18px;
+  height: 18px;
   padding: 0;
-  font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
   background: none;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
 }
 
 .toggle:hover {
-  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.item[aria-selected='true'] > .row .toggle {
+  color: rgb(255 255 255 / 0.85);
+}
+
+.chevron {
+  transition: transform 0.45s var(--spring);
+}
+
+.item[aria-expanded='true'] > .row .chevron {
+  transform: rotate(90deg);
 }
 
 .icon {
-  flex: none;
-  width: 18px;
-  text-align: center;
-  font-size: 13px;
+  display: grid;
+  place-items: center;
 }
 
 .link {
   overflow: hidden;
-  padding: 1px 4px;
-  font-family: var(--font-mono);
+  padding: 4px 4px 4px 2px;
+  color: inherit;
   font-size: 13px;
-  color: var(--color-text);
-  text-decoration: none;
+  letter-spacing: -0.005em;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+.link::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 20px;
+  border-radius: inherit;
+}
+
 .link:hover {
-  text-decoration: underline;
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  box-shadow: none;
+}
+
+.link:focus-visible::after {
+  box-shadow: var(--focus-ring);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }

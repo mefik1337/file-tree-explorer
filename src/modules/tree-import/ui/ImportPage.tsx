@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
 import { readFileAsText } from '@/shared/lib/readFileAsText';
 import { paths } from '@/shared/routing/paths';
+import buttons from '@/shared/ui/Button.module.css';
+import { AppIcon, ChevronIcon, UploadIcon, WarningIcon } from '@/shared/ui/icons';
 import { exampleTreeJson } from './exampleTree';
 import styles from './ImportPage.module.css';
 
@@ -46,6 +48,10 @@ export const ImportPage = () => {
     setDragging(true);
   };
 
+  const handleDragLeave = (event: DragEvent<HTMLFormElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+  };
+
   const handleDrop = (event: DragEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDragging(false);
@@ -55,25 +61,42 @@ export const ImportPage = () => {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>FileTree Explorer</h1>
-      <p className={styles.lead}>Paste or upload a JSON directory structure to browse it as a tree.</p>
-      {tree !== null && (
-        <Link className={styles.continue} to={paths.tree}>
-          Continue with "{tree.root.name}"
-        </Link>
-      )}
+      <header className={styles.hero}>
+        <AppIcon size={76} className={styles.appIcon} />
+        <p className={styles.eyebrow}>FileTree Explorer</p>
+        <h1 className={styles.title}>Explore any file tree.</h1>
+        <p className={styles.lead}>
+          Paste a JSON directory structure, drop a file or start with an example, then browse it the way you browse
+          Finder.
+        </p>
+        {tree !== null && (
+          <Link className={styles.continue} to={paths.tree}>
+            Continue with "{tree.root.name}"
+            <ChevronIcon className={styles.continueArrow} />
+          </Link>
+        )}
+      </header>
       <form
         aria-label="Import tree"
-        className={styles.form}
+        className={styles.card}
         data-dragging={dragging || undefined}
         onSubmit={handleSubmit}
         onDragOver={handleDragOver}
-        onDragLeave={() => setDragging(false)}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <label className={styles.label} htmlFor="tree-json">
-          Tree JSON
-        </label>
+        <div className={styles.cardHeader}>
+          <label className={styles.label} htmlFor="tree-json">
+            Tree JSON
+          </label>
+          <button
+            type="button"
+            className={`${buttons.button} ${buttons.plain} ${buttons.small}`}
+            onClick={() => setJson(exampleTreeJson)}
+          >
+            Use example
+          </button>
+        </div>
         <textarea
           id="tree-json"
           className={styles.textarea}
@@ -82,11 +105,10 @@ export const ImportPage = () => {
           value={json}
           onChange={(event) => setJson(event.target.value)}
         />
-        <div className={styles.toolbar}>
-          <button type="button" className={styles.button} onClick={() => setJson(exampleTreeJson)}>
-            Use example
-          </button>
-          <label className={styles.label} htmlFor="tree-file">
+        <div className={styles.dropZone}>
+          <UploadIcon className={styles.dropIcon} />
+          <span>Drop a .json file here or</span>
+          <label className={styles.chooseFile} htmlFor="tree-file">
             Upload JSON file
           </label>
           <input
@@ -99,12 +121,16 @@ export const ImportPage = () => {
         </div>
         {error !== null && (
           <p role="alert" className={styles.error}>
+            <WarningIcon className={styles.errorIcon} />
             {error}
           </p>
         )}
-        <button type="submit" className={styles.primary}>
-          Explore tree
-        </button>
+        <div className={styles.footer}>
+          <p className={styles.hint}>Everything stays in your browser.</p>
+          <button type="submit" className={`${buttons.button} ${buttons.primary} ${buttons.large}`}>
+            Explore tree
+          </button>
+        </div>
       </form>
     </main>
   );

@@ -1,0 +1,84 @@
+.button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.35s ease, filter 0.25s ease;
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.primary {
+  overflow: hidden;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(180deg, #5571f2 0%, #3f5cdc 55%, #3551cb 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 0 0 1px rgb(255 255 255 / 0.08), 0 1px 2px rgb(10 20 80 / 0.35),
+    0 10px 28px -12px rgb(62 91 216 / 0.85);
+}
+
+.primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.primary:hover {
+  filter: brightness(1.08) saturate(1.05);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.26), inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 1px 2px rgb(10 20 80 / 0.35),
+    0 14px 36px -12px rgb(62 91 216 / 1);
+}
+
+.secondary {
+  color: var(--color-text);
+  background: var(--color-fill);
+}
+
+.secondary:hover {
+  background: var(--color-fill-strong);
+}
+
+.plain {
+  color: var(--color-link);
+  background: transparent;
+  padding-inline: 10px;
+}
+
+.plain:hover {
+  background: var(--color-accent-soft);
+}
+
+.large {
+  min-height: 46px;
+  padding: 0 26px;
+  font-size: 16px;
+}
+
+.small {
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+}
