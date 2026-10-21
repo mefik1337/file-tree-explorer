@@ -66,4 +66,20 @@ describe('node details', () => {
     expect(currentLocation()).toBe('/tree/src%2Fcomponents%2FButton.tsx?q=btn');
     expect(screen.getByRole('heading', { level: 1, name: 'Button.tsx' })).toBeInTheDocument();
   });
+
+  it('round-trips node names with characters that are special in URLs', async () => {
+    const storedTree = JSON.stringify({
+      name: 'root',
+      type: 'folder',
+      children: [{ name: 'notes #1?', type: 'folder', children: [{ name: '100% done & ok.md', type: 'file', size: 2048 }] }],
+    });
+    const { user } = renderApp('/tree', { storedTree });
+
+    await user.click(within(screen.getByRole('tree')).getByRole('link', { name: 'notes #1?' }));
+    await user.click(within(screen.getByRole('list', { name: 'Children of notes #1?' })).getByRole('link', { name: '100% done & ok.md' }));
+
+    expect(currentLocation()).toBe('/tree/notes%20%231%3F%2F100%25%20done%20%26%20ok.md');
+    expect(detail('Full path')).toBe('root/notes #1?/100% done & ok.md');
+    expect(detail('Size')).toBe('2 KB');
+  });
 });
