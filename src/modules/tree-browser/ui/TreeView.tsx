@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ancestorPaths, type FolderNode, type TreeNode } from '@/modules/file-tree';
-import { nodeDetailsHref } from '@/shared/routing/paths';
+import { useNodeHref } from '@/shared/routing/useNodeHref';
 import { useExpandedPaths, type ExpandedPaths } from './useExpandedPaths';
 
 type TreeItemProps = {
@@ -12,7 +12,8 @@ type TreeItemProps = {
 
 const TreeItem = ({ node, expansion, selectedPath }: TreeItemProps) => {
   const selected = node.path === selectedPath;
-  const label = <Link to={nodeDetailsHref(node.path)}>{node.name}</Link>;
+  const nodeHref = useNodeHref();
+  const label = <Link to={nodeHref(node.path)}>{node.name}</Link>;
 
   if (node.kind === 'file') {
     return (

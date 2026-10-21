@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { formatFileSize, type FileTree, type FolderNode } from '@/modules/file-tree';
-import { nodeDetailsHref } from '@/shared/routing/paths';
+import { useNodeHref } from '@/shared/routing/useNodeHref';
 
 type FolderDetailsProps = {
   readonly tree: FileTree;
   readonly folder: FolderNode;
 };
 
-export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => (
+export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => {
+  const nodeHref = useNodeHref();
+  return (
   <article>
     <h1>{folder.name}</h1>
     <dl>
@@ -25,10 +27,11 @@ export const FolderDetails = ({ tree, folder }: FolderDetailsProps) => (
       <ul aria-label={`Children of ${folder.name}`}>
         {folder.children.map((child) => (
           <li key={child.path}>
-            <Link to={nodeDetailsHref(child.path)}>{child.name}</Link>
+            <Link to={nodeHref(child.path)}>{child.name}</Link>
           </li>
         ))}
       </ul>
     )}
   </article>
 );
+};

@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { FileTreeProvider, type TreeRepository } from '@/modules/file-tree';
 import { NodeDetailsPage } from '@/modules/node-details';
-import { TreeLayout } from '@/modules/tree-browser';
+import { ExplorerLayout } from './ExplorerLayout';
 import { ImportPage } from '@/modules/tree-import';
 import { paths } from '@/shared/routing/paths';
 
@@ -13,7 +13,7 @@ export const AppShell = ({ repository }: AppShellProps) => (
   <FileTreeProvider repository={repository}>
     <Routes>
       <Route path={paths.home} element={<ImportPage />} />
-      <Route path={paths.tree} element={<TreeLayout />}>
+      <Route path={paths.tree} element={<ExplorerLayout />}>
         <Route index element={<NodeDetailsPage />} />
         <Route path={paths.nodeDetails} element={<NodeDetailsPage />} />
       </Route>

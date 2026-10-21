@@ -1,1 +1,1 @@
-export { TreeLayout } from './ui/TreeLayout';
+export { TreeView } from './ui/TreeView';

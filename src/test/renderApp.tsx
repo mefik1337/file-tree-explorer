@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AppShell } from '@/app/AppShell';
 import { createLocalStorageTreeRepository } from '@/modules/file-tree';
+import { routerFuture } from '@/shared/routing/routerFuture';
 
 const LocationProbe = () => {
   const location = useLocation();
@@ -19,7 +20,7 @@ export const renderApp = (route = '/', { storedTree }: RenderAppOptions = {}) =>
   if (storedTree !== undefined) repository.save(storedTree);
 
   render(
-    <MemoryRouter initialEntries={[route]}>
+    <MemoryRouter initialEntries={[route]} future={routerFuture}>
       <AppShell repository={repository} />
       <LocationProbe />
     </MemoryRouter>,
