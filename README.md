@@ -1,124 +1,124 @@
 # FileTree Explorer
 
-Moduł wewnętrznego narzędzia developerskiego: użytkownik wkleja lub wgrywa plik JSON opisujący strukturę katalogów, a aplikacja wizualizuje ją jako drzewo i pozwala po niej nawigować.
+A module for an internal developer tool: the user pastes or uploads a JSON file describing a directory structure, and the app renders it as a navigable tree.
 
-## Uruchomienie
+## Getting started
 
-Wymagany Node.js 18+.
+Requires Node.js 18+.
 
 ```bash
 npm install && npm run dev
 ```
 
-| Skrypt | Opis |
+| Script | Description |
 |---|---|
-| `npm run dev` | serwer deweloperski Vite |
-| `npm test` | wszystkie testy (Vitest + Testing Library) |
-| `npm run test:watch` | testy w trybie watch |
-| `npm run typecheck` | sprawdzenie typów (TypeScript strict) |
-| `npm run build` | typecheck + build produkcyjny |
+| `npm run dev` | Vite dev server |
+| `npm test` | full test suite (Vitest + Testing Library) |
+| `npm run test:watch` | tests in watch mode |
+| `npm run typecheck` | type check (TypeScript strict) |
+| `npm run build` | type check + production build |
 
-## Funkcjonalności
+## Features
 
-| Ścieżka | Widok |
+| Route | View |
 |---|---|
-| `/` | Import: wklejenie JSON, wgranie pliku `.json` albo wstawienie przykładu. Błędy walidacji wskazują dokładne miejsce problemu (np. `root/src/deep/x.ts: "size" must be a non-negative number`). |
-| `/tree` | Drzewo z rozwijaniem/zwijaniem folderów + szczegóły roota. |
-| `/tree/:nodePath` | Szczegóły węzła; `nodePath` to ścieżka zakodowana `encodeURIComponent`, np. `/tree/src%2Fcomponents%2FButton.tsx`. Adres wpisany „ręcznie” ze zwykłymi ukośnikami (`/tree/src/components/Button.tsx`) jest przekierowywany na postać kanoniczną. |
+| `/` | Import: paste JSON, upload a `.json` file or insert an example. Validation errors point at the exact location of the problem (e.g. `root/src/deep/x.ts: "size" must be a non-negative number`). |
+| `/tree` | Tree with expandable/collapsible folders, plus details of the root. |
+| `/tree/:nodePath` | Node details; `nodePath` is the path encoded with `encodeURIComponent`, e.g. `/tree/src%2Fcomponents%2FButton.tsx`. An address typed by hand with plain slashes (`/tree/src/components/Button.tsx`) is redirected to the canonical form. |
 
-- **Plik:** nazwa, rozmiar (B / KB / MB, podstawa 1024), pełna ścieżka od roota.
-- **Folder:** nazwa, liczba bezpośrednich dzieci, łączny rozmiar plików w poddrzewie, lista dzieci z linkami (z rozmiarem / liczbą elementów).
-- **Wyszukiwanie:** po nazwie (bez rozróżniania wielkości liter, dopasowanie fragmentu) w całym drzewie, wyniki z pełną ścieżką i podświetlonym dopasowaniem. Zapytanie żyje w URL (`?q=`), więc wyniki przetrwają odświeżenie strony, działają wstecz/dalej i można je udostępnić linkiem. Nawigacja po szczegółach zachowuje aktywne wyszukiwanie.
-- Wczytane drzewo jest zapamiętywane w `localStorage` — odświeżenie dowolnego widoku nie wymaga ponownego importu.
-- Otwarcie szczegółów węzła rozwija w drzewie wszystkich jego przodków i zaznacza go.
+- **File:** name, size (B / KB / MB, base 1024), full path from the root.
+- **Folder:** name, number of direct children, total size of all files in the subtree, list of children with links (showing size / item count).
+- **Search:** by name (case-insensitive substring match) across the whole tree, results show the full path with the match highlighted. The query lives in the URL (`?q=`), so results survive a page refresh, work with back/forward and can be shared as a link. Navigating between node details keeps the active search.
+- The loaded tree is remembered in `localStorage` — refreshing any view does not require a new import.
+- Opening a node's details expands all of its ancestors in the tree and marks it as selected.
 
-## Decyzje architektoniczne
+## Architectural decisions
 
-### Modularny monolit + DDD
+### Modular monolith + DDD
 
 ```
 src/
-├── app/                      # composition root: routing, layout eksploratora, strona 404
+├── app/                      # composition root: routing, explorer layout, 404 page
 ├── modules/
-│   ├── file-tree/            # rdzeń domeny (bounded context „File Tree”)
-│   │   ├── domain/           # agregat FileTree, węzły, NodePath, FileSize — czysty TS, bez Reacta
-│   │   ├── application/      # przypadek użycia importFileTree, port TreeRepository
-│   │   ├── infrastructure/   # adapter localStorage dla TreeRepository
-│   │   ├── ui/               # FileTreeProvider / useFileTree (most do Reacta)
-│   │   └── index.ts          # publiczne API modułu
-│   ├── tree-import/          # strona importu (wklej / wgraj / przykład)
-│   ├── tree-browser/         # widok drzewa z rozwijaniem i zwijaniem
-│   ├── node-details/         # szczegóły pliku / folderu / „nie znaleziono”
-│   └── search/               # pole wyszukiwania, wyniki, zapytanie w URL
-└── shared/                   # generyczne: Result, routing (budowanie ścieżek), EmptyState
+│   ├── file-tree/            # core domain (the "File Tree" bounded context)
+│   │   ├── domain/           # FileTree aggregate, nodes, NodePath, FileSize — plain TS, no React
+│   │   ├── application/      # importFileTree use case, TreeRepository port
+│   │   ├── infrastructure/   # localStorage adapter for TreeRepository
+│   │   ├── ui/               # FileTreeProvider / useFileTree (bridge to React)
+│   │   └── index.ts          # module public API
+│   ├── tree-import/          # import page (paste / upload / example)
+│   ├── tree-browser/         # tree view with expand and collapse
+│   ├── node-details/         # file / folder / "not found" details
+│   └── search/               # search box, results, query kept in the URL
+└── shared/                   # generic: Result, routing (path building), EmptyState
 ```
 
-- Każdy moduł wystawia publiczne API przez `index.ts`; moduły funkcjonalne zależą tylko od publicznego API `file-tree`, nigdy od jego wnętrza.
-- `app` jest jedynym miejscem, które składa moduły (trasy, layout). Moduły nie wiedzą o `app`, a `shared` nie wie o modułach.
-- Reguły te (oraz „domena bez frameworków”, „warstwa aplikacji bez UI i infrastruktury”) są egzekwowane **testem architektury** (`src/architecture.test.ts`), który analizuje importy w kodzie źródłowym.
-- Słownik pojęć domenowych (ubiquitous language) i niezmienniki opisuje [`CONTEXT.md`](./CONTEXT.md).
+- Every module exposes its public API through `index.ts`; feature modules depend only on the public API of `file-tree`, never on its internals.
+- `app` is the only place that composes modules (routes, layout). Modules know nothing about `app`, and `shared` knows nothing about modules.
+- These rules (plus "domain is framework-free" and "application layer has no UI or infrastructure") are enforced by an **architecture test** (`src/architecture.test.ts`) that inspects imports in the source code.
+- The domain glossary (ubiquitous language) and invariants are described in [`CONTEXT.md`](./CONTEXT.md).
 
-### Domena
+### Domain
 
-- **`FileTree` to niemutowalny agregat** tworzony wyłącznie przez `FileTree.fromSnapshot(unknown)`. Walidacja odbywa się raz, na granicy („parse, don't validate”) — reszta aplikacji pracuje na typach, którym może ufać.
-- **Niezmienniki:** niepusta nazwa bez `/`, unikalne nazwy rodzeństwa (inaczej ścieżki byłyby niejednoznaczne), root musi być folderem, `size` skończone i nieujemne, `children` jest tablicą.
-- **Błędy jako wartości:** `Result<T, E>` zamiast wyjątków — kontrakt błędu jest widoczny w typie.
-- **Indeksy liczone raz przy imporcie:** mapa `ścieżka → węzeł` (O(1) dla `/tree/:nodePath`) i rozmiary poddrzew (jedno przejście O(n)), dzięki czemu widok szczegółów nie przelicza nic przy każdym renderze.
-- **Algorytmy iteracyjne** (budowa, walidacja, rozmiary, wyszukiwanie) — struktura może być dowolnie głęboka bez ryzyka przepełnienia stosu; jest na to test z głębokością 20 000.
-- **NodePath** pomija nazwę roota (`src/components/Button.tsx`), **pełna ścieżka** prezentowana użytkownikowi ją zawiera (`root/src/components/Button.tsx`).
+- **`FileTree` is an immutable aggregate** created only through `FileTree.fromSnapshot(unknown)`. Validation happens once, at the boundary ("parse, don't validate") — the rest of the app works with types it can trust.
+- **Invariants:** non-empty name without `/`, unique sibling names (otherwise paths would be ambiguous), the root must be a folder, `size` is finite and non-negative, `children` is an array.
+- **Errors as values:** `Result<T, E>` instead of exceptions — the error contract is visible in the type.
+- **Indexes computed once on import:** a `path → node` map (O(1) lookup for `/tree/:nodePath`) and subtree sizes (a single O(n) pass), so the details view never recomputes anything on render.
+- **Iterative algorithms** (building, validation, sizes, search) — the structure can be arbitrarily deep without risking a stack overflow; a test covers a depth of 20,000.
+- **NodePath** excludes the root name (`src/components/Button.tsx`); the **full path** shown to users includes it (`root/src/components/Button.tsx`).
 
-### Stan i persystencja
+### State and persistence
 
-- **Repozytorium przechowuje źródłowy JSON**, nie zserializowany agregat. Przy starcie jest on ponownie importowany (i walidowany), więc uszkodzone dane w `localStorage` są po prostu ignorowane, a nie wywracają aplikacji. Unikamy też rekurencyjnego `JSON.stringify` na bardzo głębokim drzewie.
-- Gdy przeglądarka odmówi zapisu (limit ~5 MB), drzewo działa w pamięci, a użytkownik dostaje komunikat, że nie przetrwa odświeżenia.
-- **URL jest źródłem prawdy dla nawigacji i wyszukiwania** (`/tree/:nodePath?q=…`). Dzięki temu „odporność na odświeżenie” nie wymaga dodatkowego mechanizmu, a linki są współdzielone.
-- Stan rozwinięcia folderów żyje w layoucie trasy `/tree`, więc nie ginie przy przechodzeniu między szczegółami węzłów.
-- Repozytorium jest wstrzykiwane (`<AppShell repository={…}>`), więc testy i ewentualna zmiana nośnika (np. IndexedDB) nie dotykają reszty kodu.
+- **The repository stores the source JSON**, not a serialized aggregate. On startup it is imported (and validated) again, so corrupted data in `localStorage` is simply ignored instead of crashing the app. It also avoids a recursive `JSON.stringify` on a very deep tree.
+- When the browser refuses to save (the ~5 MB limit), the tree keeps working in memory and the user is told it will not survive a refresh.
+- **The URL is the source of truth for navigation and search** (`/tree/:nodePath?q=…`). Surviving a refresh needs no extra mechanism, and links can be shared.
+- Folder expansion state lives in the `/tree` layout route, so it is not lost when moving between node details.
+- The repository is injected (`<AppShell repository={…}>`), so tests and a possible storage change (e.g. IndexedDB) do not touch the rest of the code.
 
 ### Routing
 
-- React Router v6 z włączonymi flagami `v7_startTransition` i `v7_relativeSplatPath` (gotowość na migrację do v7, brak ostrzeżeń).
-- Cała ścieżka węzła jest kodowana jednym `encodeURIComponent`, dzięki czemu mieści się w jednym segmencie `:nodePath` i poprawnie obsługuje znaki specjalne (`#`, `?`, `%`, `&`, spacje) — pokryte testem.
+- React Router v6 with the `v7_startTransition` and `v7_relativeSplatPath` flags enabled (ready for a v7 migration, no warnings).
+- The whole node path is encoded with a single `encodeURIComponent`, so it fits into one `:nodePath` segment and handles special characters (`#`, `?`, `%`, `&`, spaces) correctly — covered by a test.
 
-### UI i stylowanie
+### UI and styling
 
-- CSS Modules + zmienne CSS (motyw jasny/ciemny wg `prefers-color-scheme`), układ responsywny.
-- Semantyka i dostępność: wzorzec ARIA `tree`/`treeitem`/`group` z `aria-expanded`/`aria-selected`, `role="search"`, `role="alert"` dla błędów, `role="status"` dla ostrzeżeń, lista definicji `dl` dla atrybutów węzła.
+- CSS Modules + CSS custom properties (light/dark theme via `prefers-color-scheme`), responsive layout.
+- Semantics and accessibility: the ARIA `tree`/`treeitem`/`group` pattern with `aria-expanded`/`aria-selected`, `role="search"`, `role="alert"` for errors, `role="status"` for warnings, a `dl` definition list for node attributes.
 
-### Testy (TDD)
+### Tests (TDD)
 
-Kod powstawał w cyklu red → green, pionowymi plasterkami (jeden test → minimalna implementacja). Testy działają na trzech uzgodnionych seamach, przez publiczne interfejsy:
+The code was written in red → green cycles, in vertical slices (one test → minimal implementation). Tests run against three agreed seams, through public interfaces:
 
-1. **Publiczne API domeny `file-tree`**: walidacja snapshotu, `find`, `subtreeSize`, `fullPath`, `search`, `formatFileSize`, `importFileTree`.
-2. **Adapter repozytorium**: zapis → odczyt po „przeładowaniu”, czyszczenie, odmowa zapisu.
-3. **Aplikacja przez UI**: cały `AppShell` w `MemoryRouter`, interakcje przez `user-event`, zapytania po rolach i nazwach dostępnościowych; odświeżenie strony symulowane przez odmontowanie i ponowne wyrenderowanie aplikacji na tym samym URL i `localStorage`.
+1. **Public API of the `file-tree` domain**: snapshot validation, `find`, `subtreeSize`, `fullPath`, `search`, `formatFileSize`, `importFileTree`.
+2. **Repository adapter**: save → load after a "reload", clearing, refused writes.
+3. **The application through the UI**: the whole `AppShell` inside a `MemoryRouter`, interactions via `user-event`, queries by role and accessible name; a page refresh is simulated by unmounting and rendering the app again on the same URL and `localStorage`.
 
-Nie mockujemy własnych modułów — jedyną podmienianą granicą jest `Storage` przeglądarki (do zasymulowania przekroczenia limitu).
+Our own modules are never mocked — the only boundary that gets replaced is the browser `Storage` (to simulate exceeding the quota).
 
-### Wersje
+### Versions
 
-- Vite 6 / Vitest 3 zamiast Vite 7, ponieważ Vite 7 wymaga Node 20.19+, a wymaganiem jest Node 18+.
-- React 18, TypeScript w trybie `strict` z dodatkowymi flagami (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals` …).
+- Vite 6 / Vitest 3 instead of Vite 7, because Vite 7 requires Node 20.19+ while the requirement is Node 18+.
+- React 18, TypeScript in `strict` mode with additional flags (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals` …).
 
-## Co zrobiłbym, mając więcej czasu
+## What I would do with more time
 
-- **Wirtualizacja drzewa** (spłaszczenie widocznych węzłów + `react-window`) dla folderów z dziesiątkami tysięcy dzieci.
-- **Pełna obsługa klawiatury** wg wzorca WAI-ARIA Tree View (strzałki, Home/End, roving tabindex, type-ahead), także w wynikach wyszukiwania.
-- **Web Worker** do parsowania i indeksowania dużych plików JSON, żeby nie blokować głównego wątku; **IndexedDB** zamiast `localStorage` dla drzew > 5 MB.
-- Zapamiętywanie stanu rozwinięcia folderów (np. `sessionStorage`) między odświeżeniami.
-- Rozbudowa wyszukiwania: debounce, wyszukiwanie po ścieżce, filtrowanie po typie, wyszukiwanie rozmyte, nawigacja klawiaturą.
-- Sortowanie dzieci (foldery najpierw, po nazwie / rozmiarze), breadcrumbs w widoku szczegółów, przeciągnij-i-upuść pliku na stronę importu.
-- ESLint (z `eslint-plugin-boundaries` jako uzupełnienie testu architektury) + Prettier, CI na GitHub Actions, testy E2E w Playwright (prawdziwe odświeżenie przeglądarki, upload pliku).
-- Synchronizacja między kartami przez zdarzenie `storage`.
+- **Tree virtualization** (flattening visible nodes + `react-window`) for folders with tens of thousands of children.
+- **Full keyboard support** following the WAI-ARIA Tree View pattern (arrow keys, Home/End, roving tabindex, type-ahead), also in search results.
+- A **Web Worker** for parsing and indexing large JSON files so the main thread is not blocked; **IndexedDB** instead of `localStorage` for trees larger than 5 MB.
+- Remembering folder expansion state across refreshes (e.g. `sessionStorage`).
+- Richer search: debounce, search by path, filtering by type, fuzzy matching, keyboard navigation.
+- Sorting children (folders first, by name / size), breadcrumbs in the details view, drag-and-drop of a file onto the import page.
+- ESLint (with `eslint-plugin-boundaries` alongside the architecture test) + Prettier, CI on GitHub Actions, Playwright E2E tests (real browser refresh, file upload).
+- Cross-tab synchronization via the `storage` event.
 
-## Znane ograniczenia
+## Known limitations
 
-- Drzewo zapisywane jest w `localStorage` (limit zależny od przeglądarki, zwykle ~5 MB). Większe drzewa działają, ale nie przetrwają odświeżenia — aplikacja wyraźnie o tym informuje.
-- Na raz wczytane jest jedno drzewo; import w jednej karcie nie aktualizuje innych otwartych kart do czasu ich odświeżenia.
-- Widok drzewa nie jest wirtualizowany: folder z bardzo dużą liczbą bezpośrednich dzieci lub ręczne rozwinięcie tysięcy poziomów będzie renderować się wolno. Domena obsługuje dowolną głębokość, ale ekstremalnie głębokie zagnieżdżenie DOM jest kosztowne dla przeglądarki.
-- Bardzo duże lub ekstremalnie głęboko zagnieżdżone JSON-y mogą przekroczyć możliwości `JSON.parse` danego silnika — zostaną wtedy zgłoszone jako niepoprawny JSON.
-- Wyświetlanych jest maksymalnie 200 pierwszych wyników wyszukiwania (z informacją o łącznej liczbie trafień).
-- Rodzeństwo o identycznych nazwach jest odrzucane przy imporcie (świadoma decyzja — inaczej ścieżki byłyby niejednoznaczne). Nazwy nie mogą zawierać `/`.
-- Rozmiary formatowane są w B / KB / MB z podstawą 1024 (zgodnie z wymaganiem); wartości powyżej 1024 MB pozostają w MB.
-- Stan rozwinięcia folderów nie jest zapamiętywany po odświeżeniu (automatycznie rozwijani są tylko przodkowie aktualnie otwartego węzła).
-- Interfejs jest po angielsku (typowo dla narzędzi developerskich); brak i18n.
+- The tree is stored in `localStorage` (browser-dependent limit, usually ~5 MB). Larger trees work, but will not survive a refresh — the app says so explicitly.
+- Only one tree is loaded at a time; an import in one tab does not update other open tabs until they are refreshed.
+- The tree view is not virtualized: a folder with a very large number of direct children, or manually expanding thousands of levels, will render slowly. The domain handles any depth, but extremely deep DOM nesting is expensive for the browser.
+- Very large or extremely deeply nested JSON may exceed what the engine's `JSON.parse` can handle — it is then reported as invalid JSON.
+- At most the first 200 search results are displayed (with the total number of matches shown).
+- Siblings with identical names are rejected on import (a deliberate decision — otherwise paths would be ambiguous). Names cannot contain `/`.
+- Sizes are formatted as B / KB / MB with base 1024 (as required); values above 1024 MB stay in MB.
+- Folder expansion state is not remembered after a refresh (only the ancestors of the currently opened node are expanded automatically).
+- The UI is in English (typical for developer tools); there is no i18n.
