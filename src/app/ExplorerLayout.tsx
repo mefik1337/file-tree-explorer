@@ -6,7 +6,7 @@ import { NoTreeLoaded } from '@/modules/tree-import';
 import { useCurrentNodePath } from '@/shared/routing/useCurrentNodePath';
 
 export const ExplorerLayout = () => {
-  const { tree } = useFileTree();
+  const { tree, persisted } = useFileTree();
   const selectedPath = useCurrentNodePath();
   const [query, setQuery] = useSearchQuery();
 
@@ -15,6 +15,9 @@ export const ExplorerLayout = () => {
   const searching = query.trim() !== '';
   return (
     <div>
+      {!persisted && (
+        <p role="status">This tree is too large to be saved in the browser and will be lost after a refresh.</p>
+      )}
       <aside>
         <SearchBox query={query} onQueryChange={setQuery} />
         {searching && <SearchResults tree={tree} query={query} />}

@@ -59,4 +59,11 @@ describe('node details', () => {
 
     expect(screen.getByText('This folder is empty.')).toBeInTheDocument();
   });
+
+  it('accepts a node path typed with plain slashes and normalises the address', () => {
+    renderApp('/tree/src/components/Button.tsx?q=btn', { storedTree: sampleJson });
+
+    expect(currentLocation()).toBe('/tree/src%2Fcomponents%2FButton.tsx?q=btn');
+    expect(screen.getByRole('heading', { level: 1, name: 'Button.tsx' })).toBeInTheDocument();
+  });
 });

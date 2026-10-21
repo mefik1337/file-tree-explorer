@@ -1,11 +1,12 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useFileTree } from '@/modules/file-tree';
 import { readFileAsText } from '@/shared/lib/readFileAsText';
 import { paths } from '@/shared/routing/paths';
+import { exampleTreeJson } from './exampleTree';
 
 export const ImportPage = () => {
-  const { loadTree } = useFileTree();
+  const { tree, loadTree } = useFileTree();
   const navigate = useNavigate();
   const [json, setJson] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,13 +35,20 @@ export const ImportPage = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="tree-json">Tree JSON</label>
-      <textarea id="tree-json" value={json} onChange={(event) => setJson(event.target.value)} />
-      <label htmlFor="tree-file">Upload JSON file</label>
-      <input id="tree-file" type="file" accept=".json,application/json" onChange={handleUpload} />
-      {error !== null && <p role="alert">{error}</p>}
-      <button type="submit">Explore tree</button>
-    </form>
+    <main>
+      <h1>FileTree Explorer</h1>
+      {tree !== null && <Link to={paths.tree}>Continue with "{tree.root.name}"</Link>}
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="tree-json">Tree JSON</label>
+        <textarea id="tree-json" value={json} onChange={(event) => setJson(event.target.value)} />
+        <button type="button" onClick={() => setJson(exampleTreeJson)}>
+          Use example
+        </button>
+        <label htmlFor="tree-file">Upload JSON file</label>
+        <input id="tree-file" type="file" accept=".json,application/json" onChange={handleUpload} />
+        {error !== null && <p role="alert">{error}</p>}
+        <button type="submit">Explore tree</button>
+      </form>
+    </main>
   );
 };

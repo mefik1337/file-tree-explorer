@@ -7,16 +7,17 @@ import { routerFuture } from '@/shared/routing/routerFuture';
 
 const LocationProbe = () => {
   const location = useLocation();
-  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 };
 
 type RenderAppOptions = {
   readonly storedTree?: string;
+  readonly storage?: Storage;
 };
 
-export const renderApp = (route = '/', { storedTree }: RenderAppOptions = {}) => {
+export const renderApp = (route = '/', { storedTree, storage = window.localStorage }: RenderAppOptions = {}) => {
   const user = userEvent.setup();
-  const repository = createLocalStorageTreeRepository(window.localStorage);
+  const repository = createLocalStorageTreeRepository(storage);
   if (storedTree !== undefined) repository.save(storedTree);
 
   render(

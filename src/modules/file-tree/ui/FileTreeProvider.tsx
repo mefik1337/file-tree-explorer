@@ -6,6 +6,7 @@ import type { FileTree } from '../domain/FileTree';
 
 type FileTreeContextValue = {
   readonly tree: FileTree | null;
+  readonly persisted: boolean;
   readonly loadTree: (json: string) => Result<FileTree, ImportError>;
 };
 
@@ -25,12 +26,13 @@ type FileTreeProviderProps = {
 
 export const FileTreeProvider = ({ repository, children }: FileTreeProviderProps) => {
   const [tree, setTree] = useState<FileTree | null>(() => restoreTree(repository));
+  const [persisted, setPersisted] = useState(true);
 
   const loadTree = useCallback(
     (json: string) => {
       const imported = importFileTree(json);
       if (imported.ok) {
-        repository.save(json);
+        setPersisted(repository.save(json));
         setTree(imported.value);
       }
       return imported;
@@ -38,7 +40,7 @@ export const FileTreeProvider = ({ repository, children }: FileTreeProviderProps
     [repository],
   );
 
-  const value = useMemo(() => ({ tree, loadTree }), [tree, loadTree]);
+  const value = useMemo(() => ({ tree, persisted, loadTree }), [tree, persisted, loadTree]);
 
   return <FileTreeContext.Provider value={value}>{children}</FileTreeContext.Provider>;
 };

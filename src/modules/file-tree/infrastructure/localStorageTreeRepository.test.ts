@@ -1,22 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sampleJson } from '@/test/fixtures';
+import { createRefusingStorage } from '@/test/storage';
 import { createLocalStorageTreeRepository } from './localStorageTreeRepository';
-
-const createRefusingStorage = (): Storage => {
-  const storage = window.localStorage;
-  return {
-    get length() {
-      return storage.length;
-    },
-    key: (index) => storage.key(index),
-    getItem: (key) => storage.getItem(key),
-    removeItem: (key) => storage.removeItem(key),
-    clear: () => storage.clear(),
-    setItem: () => {
-      throw new DOMException('Quota exceeded', 'QuotaExceededError');
-    },
-  };
-};
 
 describe('localStorage tree repository', () => {
   it('has nothing to load before anything was saved', () => {

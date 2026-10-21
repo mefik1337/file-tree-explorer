@@ -1,0 +1,23 @@
+export const exampleTreeJson = JSON.stringify(
+  {
+    name: 'root',
+    type: 'folder',
+    children: [
+      {
+        name: 'src',
+        type: 'folder',
+        children: [
+          { name: 'index.ts', type: 'file', size: 1024 },
+          {
+            name: 'components',
+            type: 'folder',
+            children: [{ name: 'Button.tsx', type: 'file', size: 512 }],
+          },
+        ],
+      },
+      { name: 'package.json', type: 'file', size: 300 },
+    ],
+  },
+  null,
+  2,
+);
