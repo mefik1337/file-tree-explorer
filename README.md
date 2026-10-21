@@ -17,18 +17,26 @@ npm install && npm run dev
 | `npm run test:watch` | tests in watch mode |
 | `npm run typecheck` | type check (TypeScript strict) |
 | `npm run build` | type check + production build |
+| `npm run generate:large-tree` | regenerate `examples/large-tree.json` |
+
+### Large example tree
+
+[`examples/large-tree.json`](./examples/large-tree.json) is a realistic monorepo of ~29,000 nodes (≈23,400 files, ≈5,700 folders, 1.4 MB) for trying the app at scale. It includes a `node_modules` folder with 1,400 direct children, a chain nested 120 levels deep, an empty folder and a 1.8 MB lock file. Upload it on the import page or drop it onto the form. It is produced by a deterministic generator ([`scripts/generate-large-tree.mjs`](./scripts/generate-large-tree.mjs)), so it can be regenerated or adapted.
+
+Measured in headless Chrome on the dev server: restoring and rendering the tree takes ~0.6 s, expanding the 1,400-child folder ~0.3 s, a search over the whole tree ~0.3 s.
 
 ## Features
 
 | Route | View |
 |---|---|
-| `/` | Import: paste JSON, upload a `.json` file or insert an example. Validation errors point at the exact location of the problem (e.g. `root/src/deep/x.ts: "size" must be a non-negative number`). |
+| `/` | Import: paste JSON, upload or drag-and-drop a `.json` file, or insert an example. Validation errors point at the exact location of the problem (e.g. `root/src/deep/x.ts: "size" must be a non-negative number`). |
 | `/tree` | Tree with expandable/collapsible folders, plus details of the root. |
 | `/tree/:nodePath` | Node details; `nodePath` is the path encoded with `encodeURIComponent`, e.g. `/tree/src%2Fcomponents%2FButton.tsx`. An address typed by hand with plain slashes (`/tree/src/components/Button.tsx`) is redirected to the canonical form. |
 
 - **File:** name, size (B / KB / MB, base 1024), full path from the root.
+- **Path bar:** every details view starts with a Finder-like path bar linking to each ancestor.
 - **Folder:** name, number of direct children, total size of all files in the subtree, list of children with links (showing size / item count).
-- **Search:** by name (case-insensitive substring match) across the whole tree, results show the full path with the match highlighted. The query lives in the URL (`?q=`), so results survive a page refresh, work with back/forward and can be shared as a link. Navigating between node details keeps the active search.
+- **Search:** by name (case-insensitive substring match) across the whole tree, results show the full path with the match highlighted. The query lives in the URL (`?q=`), so results survive a page refresh, work with back/forward and can be shared as a link. Navigating between node details keeps the active search. `Escape` clears it.
 - The loaded tree is remembered in `localStorage` — refreshing any view does not require a new import.
 - Opening a node's details expands all of its ancestors in the tree and marks it as selected.
 
@@ -82,7 +90,10 @@ src/
 
 ### UI and styling
 
-- CSS Modules + CSS custom properties (light/dark theme via `prefers-color-scheme`), responsive layout.
+- Apple-style design language, built on the same tokens as our Media Tool project: apple.com neutrals (`#1d1d1f`, `#f5f5f7`, `#6e6e73`), one blue accent, translucent "glass" materials (`backdrop-filter: blur(36px) saturate(1.9)` with a top sheen and hairline edge), spring easings sampled into CSS `linear()` curves, pill buttons with a subtle grain.
+- Finder-inspired explorer: glass navigation bar, translucent source-list sidebar, pill-shaped selection, disclosure chevrons that rotate on a spring, document icons tinted by file type; details laid out like "Get Info" with iOS-style grouped lists.
+- Typography: the system font on Apple devices (SF Pro), Inter elsewhere; JetBrains Mono for paths. Fonts are bundled through `@fontsource`, so nothing loads from a CDN.
+- CSS Modules + CSS custom properties, light and dark themes via `prefers-color-scheme`, responsive down to phone width, `prefers-reduced-motion` respected.
 - Semantics and accessibility: the ARIA `tree`/`treeitem`/`group` pattern with `aria-expanded`/`aria-selected`, `role="search"`, `role="alert"` for errors, `role="status"` for warnings, a `dl` definition list for node attributes.
 
 ### Tests (TDD)
@@ -107,7 +118,7 @@ Our own modules are never mocked — the only boundary that gets replaced is the
 - A **Web Worker** for parsing and indexing large JSON files so the main thread is not blocked; **IndexedDB** instead of `localStorage` for trees larger than 5 MB.
 - Remembering folder expansion state across refreshes (e.g. `sessionStorage`).
 - Richer search: debounce, search by path, filtering by type, fuzzy matching, keyboard navigation.
-- Sorting children (folders first, by name / size), breadcrumbs in the details view, drag-and-drop of a file onto the import page.
+- Sorting children (folders first, by name / size), a column view à la Finder, a manual light/dark switch.
 - ESLint (with `eslint-plugin-boundaries` alongside the architecture test) + Prettier, CI on GitHub Actions, Playwright E2E tests (real browser refresh, file upload).
 - Cross-tab synchronization via the `storage` event.
 
