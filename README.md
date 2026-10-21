@@ -90,7 +90,7 @@ src/
 
 ### UI and styling
 
-- Apple-style design language, built on the same tokens as our Media Tool project: apple.com neutrals (`#1d1d1f`, `#f5f5f7`, `#6e6e73`), one blue accent, translucent "glass" materials (`backdrop-filter: blur(36px) saturate(1.9)` with a top sheen and hairline edge), spring easings sampled into CSS `linear()` curves, pill buttons with a subtle grain.
+- Apple-style design language: apple.com neutrals (`#1d1d1f`, `#f5f5f7`, `#6e6e73`), one blue accent, translucent "glass" materials (`backdrop-filter: blur(36px) saturate(1.9)` with a top sheen and hairline edge), spring easings sampled into CSS `linear()` curves, pill buttons with a subtle grain.
 - Finder-inspired explorer: glass navigation bar, translucent source-list sidebar, pill-shaped selection, disclosure chevrons that rotate on a spring, document icons tinted by file type; details laid out like "Get Info" with iOS-style grouped lists.
 - Typography: the system font on Apple devices (SF Pro), Inter elsewhere; JetBrains Mono for paths. Fonts are bundled through `@fontsource`, so nothing loads from a CDN.
 - CSS Modules + CSS custom properties, light and dark themes via `prefers-color-scheme`, responsive down to phone width, `prefers-reduced-motion` respected.
