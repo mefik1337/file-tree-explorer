@@ -31,6 +31,10 @@
   letter-spacing: -0.02em;
 }
 
+.brandName {
+  white-space: nowrap;
+}
+
 .brand:hover {
   text-decoration: none;
 }
@@ -153,7 +157,16 @@
   }
 
   .treeName,
+  .brandName,
   .themeSwitch {
     display: none;
+  }
+
+  .navBar {
+    padding: 0 10px 0 12px;
+  }
+
+  .navActions {
+    gap: 8px;
   }
 }

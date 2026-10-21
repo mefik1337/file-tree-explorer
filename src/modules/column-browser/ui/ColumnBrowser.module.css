@@ -75,6 +75,7 @@
   flex: 1 0 380px;
   min-width: 380px;
   padding: 24px 28px 48px;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

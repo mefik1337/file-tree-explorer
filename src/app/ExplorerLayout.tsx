@@ -25,7 +25,7 @@ export const ExplorerLayout = () => {
       <header className={styles.navBar}>
         <Link className={styles.brand} to={paths.home}>
           <AppIcon size={26} />
-          FileTree Explorer
+          <span className={styles.brandName}>FileTree Explorer</span>
           <span className={styles.treeName}>· {tree.root.name}</span>
         </Link>
         <div className={styles.navActions}>
