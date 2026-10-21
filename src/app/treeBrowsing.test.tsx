@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { sampleJson } from '@/test/fixtures';
-import { renderApp } from '@/test/renderApp';
+import { currentLocation, renderApp } from '@/test/renderApp';
 
 describe('browsing the tree', () => {
   it('shows folders collapsed at first', () => {
@@ -46,5 +46,33 @@ describe('browsing the tree', () => {
 
     expect(screen.getByRole('treeitem', { name: 'package.json' })).not.toHaveAttribute('aria-expanded');
     expect(screen.queryByRole('button', { name: 'Expand package.json' })).not.toBeInTheDocument();
+  });
+
+  it('opens the details of a node picked in the tree', async () => {
+    const { user } = renderApp('/tree', { storedTree: sampleJson });
+    const tree = screen.getByRole('tree');
+
+    await user.click(within(tree).getByRole('button', { name: 'Expand src' }));
+    await user.click(within(tree).getByRole('link', { name: 'index.ts' }));
+
+    expect(currentLocation()).toBe('/tree/src%2Findex.ts');
+    expect(screen.getByRole('heading', { level: 1, name: 'index.ts' })).toBeInTheDocument();
+  });
+
+  it('reveals and marks the current node when its details are opened directly', () => {
+    renderApp('/tree/src%2Fcomponents%2FButton.tsx', { storedTree: sampleJson });
+
+    expect(screen.getByRole('treeitem', { name: 'Button.tsx' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('keeps folders expanded while moving between node details', async () => {
+    const { user } = renderApp('/tree', { storedTree: sampleJson });
+    const tree = screen.getByRole('tree');
+
+    await user.click(within(tree).getByRole('button', { name: 'Expand src' }));
+    await user.click(within(tree).getByRole('link', { name: 'package.json' }));
+
+    expect(within(tree).getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-expanded', 'true');
   });
 });

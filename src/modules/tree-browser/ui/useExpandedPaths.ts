@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 export type ExpandedPaths = {
   readonly isExpanded: (path: string) => boolean;
   readonly toggle: (path: string) => void;
+  readonly expand: (paths: readonly string[]) => void;
 };
 
 export const useExpandedPaths = (): ExpandedPaths => {
@@ -19,5 +20,9 @@ export const useExpandedPaths = (): ExpandedPaths => {
     });
   }, []);
 
-  return { isExpanded, toggle };
+  const expand = useCallback((paths: readonly string[]) => {
+    setExpanded((current) => (paths.every((path) => current.has(path)) ? current : new Set([...current, ...paths])));
+  }, []);
+
+  return { isExpanded, toggle, expand };
 };

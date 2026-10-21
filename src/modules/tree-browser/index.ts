@@ -1,1 +1,1 @@
-export { TreePage } from './ui/TreePage';
+export { TreeLayout } from './ui/TreeLayout';
